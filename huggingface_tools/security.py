@@ -107,6 +107,63 @@ def validate_huggingface_repo_id(repo_id: str) -> bool:
     return True
 
 
+def validate_s3_bucket_name(bucket: str) -> bool:
+    """
+    Validate an S3 bucket name against AWS naming rules.
+
+    Args:
+        bucket: Bucket name to validate
+
+    Returns:
+        True if valid, False otherwise
+    """
+    # AWS rules: 3-63 chars, lowercase letters/digits/hyphens/dots,
+    # must start and end with a letter or digit, no consecutive dots,
+    # not formatted as an IP address.
+    if not (3 <= len(bucket) <= 63):
+        logger.warning(f"Invalid S3 bucket name length: {bucket}")
+        return False
+
+    if not re.match(r'^[a-z0-9][a-z0-9.-]*[a-z0-9]$', bucket):
+        logger.warning(f"Invalid S3 bucket name format: {bucket}")
+        return False
+
+    if '..' in bucket:
+        logger.warning(f"Invalid S3 bucket name (consecutive dots): {bucket}")
+        return False
+
+    if re.match(r'^\d{1,3}(\.\d{1,3}){3}$', bucket):
+        logger.warning(f"S3 bucket name must not be an IP address: {bucket}")
+        return False
+
+    return True
+
+
+def sanitize_s3_prefix(prefix: str) -> str:
+    """
+    Normalize an S3 key prefix.
+
+    Strips leading slashes and collapses path traversal markers so the
+    prefix cannot escape its intended location in the bucket.
+
+    Args:
+        prefix: Raw prefix string
+
+    Returns:
+        Normalized prefix (no leading slash, single trailing slash if non-empty)
+    """
+    # Drop null bytes and leading slashes; reject traversal segments.
+    prefix = prefix.replace('\x00', '').lstrip('/')
+
+    parts = [p for p in prefix.split('/') if p not in ('', '.', '..')]
+    normalized = '/'.join(parts)
+
+    if normalized:
+        normalized += '/'
+
+    return normalized
+
+
 def sanitize_filename(filename: str) -> str:
     """
     Sanitize a filename to prevent directory traversal and other attacks.
