@@ -1,23 +1,24 @@
+# Dependabot version + security updates, grouped per ecosystem.
+# One PR per ecosystem per update-type instead of one PR per package.
 version: 2
-
-multi-ecosystem-groups:
-  monthly-dependencies:
-    schedule:
-      interval: monthly
-      day: monday
-      time: "09:00"
-      timezone: America/Los_Angeles
-    labels:
-      - dependencies
-
 updates:
-  - package-ecosystem: pip
-    directory: /
-    patterns: ["*"]
-    multi-ecosystem-group: monthly-dependencies
-    groups:
-      pip-security:
-        applies-to: security-updates
-        patterns: ["*"]
-    commit-message:
-      prefix: deps
+- package-ecosystem: pip
+  directory: /
+  commit-message:
+    prefix: deps
+  schedule:
+    interval: monthly
+    day: monday
+    time: "09:00"
+    timezone: America/Los_Angeles
+  labels:
+  - dependencies
+  groups:
+    pip-version:
+      applies-to: version-updates
+      patterns:
+      - '*'
+    pip-security:
+      applies-to: security-updates
+      patterns:
+      - '*'
