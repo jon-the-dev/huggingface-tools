@@ -6,6 +6,10 @@ on: push
 # env:
 #     SVC_NAME: sk-example-app
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_name != github.event.repository.default_branch }}
+
 jobs:
   pylint:
     name: Pylint
